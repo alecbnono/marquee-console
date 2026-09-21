@@ -1,0 +1,98 @@
+#include "AsciiArt.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cctype>
+#include <unordered_map>
+
+// Font style mimics classic figlet "standard"-font banners: thin strokes
+// built from '_', '/', '\', '|' rather than solid blocks. Each glyph is its
+// own width (proportional, like real figlet fonts) and always 6 rows tall.
+
+namespace {
+
+constexpr int kGlyphHeight = 6;
+
+// Fixed-size so a miscounted glyph literal cannot index out of bounds.
+using Glyph = std::array<std::string, kGlyphHeight>;
+
+const Glyph kBlank = {"    ", "    ", "    ", "    ", "    ", "    "};
+
+const std::unordered_map<char, Glyph>& fontTable() {
+    static const std::unordered_map<char, Glyph> table = {
+        {'0', {"  ___  ", " / _ \\ ", "| | | |", "| | | |", "| |_| |", " \\___/ "}},
+        {'1', {" __ ", "/_ |", " | |", " | |", " | |", " |_|"}},
+        {'2', {" ___  ", "|__ \\ ", "   ) |", "  / / ", " / /_ ", "|____|"}},
+        {'3', {" ____  ", "|___ \\ ", "  __) |", " |__ < ", " ___) |", "|____/ "}},
+        {'4', {" _  _   ", "| || |  ", "| || |_ ", "|__   _|", "   | |  ", "   |_|  "}},
+        {'5', {" _____ ", "| ____|", "| |__  ", "|___ \\ ", " ___) |", "|____/ "}},
+        {'6', {"   __  ", "  / /  ", " / /_  ", "| '_ \\ ", "| (_) |", " \\___/ "}},
+        {'7', {" ______ ", "|____  |", "    / / ", "   / /  ", "  / /   ", " /_/    "}},
+        {'8', {"  ___  ", " / _ \\ ", "| (_) |", " > _ < ", "| (_) |", " \\___/ "}},
+        {'9', {"  ___  ", " / _ \\ ", "| (_) |", " \\__, |", "   / / ", "  /_/  "}},
+        {'A', {"     _     ", "    / \\    ", "   / _ \\   ", "  / ___ \\  ", " / /   \\ \\ ", "/_/     \\_\\"}},
+        {'B', {" ____  ", "|  _ \\ ", "| |_) |", "|  _ < ", "| |_) |", "|____/ "}},
+        {'C', {"  ____ ", " / ___|", "| |    ", "| |    ", "| |___ ", " \\____|"}},
+        {'D', {" _____  ", "|  __ \\ ", "| |  | |", "| |  | |", "| |__| |", "|_____/ "}},
+        {'E', {" _____ ", "| ____|", "| |__  ", "|  __| ", "| |___ ", "|_____|"}},
+        {'F', {" _____ ", "|  ___|", "| |_   ", "|  _|  ", "| |    ", "|_|    "}},
+        {'G', {"  ____ ", " / ___|", "| |  _ ", "| | | |", "| |_| |", " \\____|"}},
+        {'H', {" _   _ ", "| | | |", "| |_| |", "|  _  |", "| | | |", "|_| |_|"}},
+        {'I', {" _____ ", "|_   _|", "  | |  ", "  | |  ", " _| |_ ", "|_____|"}},
+        {'J', {"     _ ", "    | |", "    | |", " _  | |", "| |_| |", " \\___/ "}},
+        {'K', {" _  __ ", "| |/ / ", "| ' /  ", "|   <  ", "| |\\ \\ ", "|_| \\_\\"}},
+        {'L', {" _      ", "| |     ", "| |     ", "| |     ", "| |____ ", "|______|"}},
+        {'M', {" __  __ ", "|  \\/  |", "| \\  / |", "| |\\/| |", "| |  | |", "|_|  |_|"}},
+        {'N', {" _   _ ", "| \\ | |", "|  \\| |", "| . ` |", "| |\\  |", "|_| \\_|"}},
+        {'O', {"  ___  ", " / _ \\ ", "| | | |", "| | | |", "| |_| |", " \\___/ "}},
+        {'P', {" _____  ", "|  __ \\ ", "| |__) |", "|  ___/ ", "| |     ", "|_|     "}},
+        {'Q', {"  ___  ", " / _ \\ ", "| | | |", "| |_| |", " \\__, |", "   /_/ "}},
+        {'R', {" _____  ", "|  __ \\ ", "| |__) |", "|  _  / ", "| | \\ \\ ", "|_|  \\_\\"}},
+        {'S', {"  _____ ", " / ____|", "| (___  ", " \\___ \\ ", " ____) |", "|_____/ "}},
+        {'T', {" _______ ", "|__   __|", "   | |   ", "   | |   ", "   | |   ", "   |_|   "}},
+        {'U', {" _   _ ", "| | | |", "| | | |", "| | | |", "| |_| |", " \\___/ "}},
+        {'V', {"__      __", "\\ \\    / /", " \\ \\  / / ", "  \\ \\/ /  ", "   \\  /   ", "    \\/    "}},
+        {'W', {"__          __", "\\ \\        / /", " \\ \\  /\\  / / ", "  \\ \\/  \\/ /  ", "   \\  /\\  /   ", "    \\/  \\/    "}},
+        {'X', {"__   __", "\\ \\ / /", " \\ V / ", "  > <  ", " / ^ \\ ", "/_/ \\_\\"}},
+        {'Y', {"__   __", "\\ \\ / /", " \\ V / ", "  \\ /  ", "  | |  ", "  |_|  "}},
+        {'Z', {" ______  ", "|___  /  ", "   / /   ", "  / /    ", " / /____ ", "/_______|"}},
+    };
+    return table;
+}
+
+const Glyph& glyphFor(char c) {
+    char upper = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+    const auto& table = fontTable();
+    auto it = table.find(upper);
+    if (it == table.end()) {
+        return kBlank;
+    }
+    return it->second;
+}
+
+}  // namespace
+
+std::vector<std::string> renderAsciiArt(const std::string& text) {
+    std::vector<std::string> rows(kGlyphHeight);
+
+    bool first = true;
+    for (char c : text) {
+        const Glyph& glyph = glyphFor(c);
+        std::size_t width = 0;
+        for (const std::string& row : glyph) {
+            width = std::max(width, row.size());
+        }
+
+        for (int row = 0; row < kGlyphHeight; ++row) {
+            if (!first) {
+                rows[row] += ' ';
+            }
+            std::string cell = glyph[row];
+            cell.resize(width, ' ');
+            rows[row] += cell;
+        }
+        first = false;
+    }
+
+    return rows;
+}
