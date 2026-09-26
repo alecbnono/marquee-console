@@ -1,4 +1,5 @@
 #include "Controller.hpp"
+#include "AsciiArt.hpp"
 
 #include <sstream>
 
@@ -43,6 +44,11 @@ bool Controller::handleCommand(const std::string& line) {
         }
         model_.setText(text);
         view_.showMessage("Text saved for marquee: " + text);
+        return true;
+    }
+
+    if (command == "start_marquee") {
+        view_.showMarquee(renderAsciiArt(model_.getText()), model_.getSpeed());
         return true;
     }
 

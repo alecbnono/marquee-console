@@ -13,6 +13,7 @@ int main() {
     view.showMessage("Welcome to CSOPESY!.\n");
     view.showMessage("Group Developers:");
     view.showMessage("Nono, Alec Marx");
+    view.showMessage("Obregon, Sian Ysabelle");
     view.showMessage("Ponce, Jean Rondel");
     view.showMessage("Sy, Prince Matthew\n");
     view.showMessage("Type 'help' for a list of commands.");
