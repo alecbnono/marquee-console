@@ -1,6 +1,6 @@
-# Command Interpreter
+# Marquee Console Command Interpreter
 
-A small command interpreter written in C++17 to practice operating systems concepts (CSOPESY). It reads commands from a prompt, parses them, and responds. The code is split into Model / View / Controller.
+A small marquee console command interpreter written in C++17 to practice operating systems concepts (CSOPESY). It reads commands from a prompt, parses them, and responds. The code is split into Model / View / Controller.
 
 ## Group members
 - Nono, Alec Marx  
