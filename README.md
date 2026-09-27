@@ -2,6 +2,12 @@
 
 A small command interpreter written in C++17 to practice operating systems concepts (CSOPESY). It reads commands from a prompt, parses them, and responds. The code is split into Model / View / Controller.
 
+## Group members
+- Nono, Alec Marx  
+- Ponce, Jean Rondel  
+- Obregon, Sian Ysabelle  
+- Sy, Prince Matthew  
+
 ## Commands
 
 | Command          | Description                                           |
