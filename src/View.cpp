@@ -103,8 +103,9 @@ void View::showMarquee(const std::vector<std::string>& text, int speed) {
     isRunning_ = true;
     marqueeThread_ = std::thread([this, paddedText, text, rowWidth, speed]() {
         // Offset scrolls from off-screen left to off-screen right
-        for (int offset = -kWindowWidth; offset <= rowWidth + kWindowWidth; ++offset) {
-            if (stopRequested_) break;
+        int offset = -kWindowWidth;
+
+        while (!stopRequested_) {
 
             // Save current user cursor position in the console region
             std::cout << "\x1b[s";
@@ -149,6 +150,12 @@ void View::showMarquee(const std::vector<std::string>& text, int speed) {
             std::cout << "\x1b[u" << std::flush;
 
             std::this_thread::sleep_for(std::chrono::milliseconds(speed));
+
+            // 6. Loop continuously until stop_marquee is called
+            ++offset;
+            if (offset > rowWidth) {
+                offset = -kWindowWidth;
+            }
         }
 
         // Restore cursor position on animation completion
