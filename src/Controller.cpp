@@ -88,6 +88,15 @@ bool Controller::handleCommand(const std::string& line) {
         return true;
     }
 
+    if (command == "stop_marquee") {
+        if (!view_.isMarqueeRunning()) {
+            view_.showMessage("No marquee is currently running.");
+        } else {
+            view_.stopMarquee();
+        }
+        return true;
+    }
+
     view_.showMessage("Unknown command: " + command + " (type 'help')");
     return true;
 }
