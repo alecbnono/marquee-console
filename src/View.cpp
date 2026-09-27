@@ -4,6 +4,16 @@
 
 #include "AsciiArt.hpp"
 
+namespace {
+// Region boundary constants for split-screen console display.
+// Top: Marquee Region (rows 1 to 10)
+// Bottom: Console Region (rows 12+)
+constexpr int kMarqueeStartRow = 1;
+constexpr int kMarqueeMaxRows = 10;
+constexpr int kConsoleStartRow = 12;
+constexpr int kWindowWidth = 100;
+}  // namespace
+
 void View::showMessage(const std::string& message) const {
     std::cout << message << "\n";
 }
@@ -42,7 +52,7 @@ void View::stopMarquee() {
         if (isRunning_.load()) {
             stopRequested_ = true;
             marqueeThread_.join();
-            showMessage("Marquee stopped.");
+            showMessage("\nMarquee stopped.");
         } else {
             marqueeThread_.join();
         }
@@ -53,12 +63,14 @@ void View::showMarquee(const std::vector<std::string>& text, int speed) {
     stopMarquee();
 
     stopRequested_ = false;
-
+    
+    // Pads all rows to the same width
     int rowWidth = 0;
     for (const auto& r : text) {
         if ((int)r.size() > rowWidth) rowWidth = (int)r.size();
     }
 
+    // Pads each row to the same width so scrolling window is stable
     std::vector<std::string> paddedText = text;
     for (auto& r : paddedText) {
         while ((int)r.size() < rowWidth) r += ' ';
@@ -66,18 +78,25 @@ void View::showMarquee(const std::vector<std::string>& text, int speed) {
 
     isRunning_ = true;
     marqueeThread_ = std::thread([this, paddedText, text, rowWidth, speed]() {
-        const int ROW = 5;
-        const int COL = 1;
-        const int WINDOW = 100;
-
-        for (int offset = -WINDOW; offset <= rowWidth + WINDOW; ++offset) {
+        // Offset scrolls from off-screen left to off-screen right
+        for (int offset = -kWindowWidth; offset <= rowWidth + kWindowWidth; ++offset) {
             if (stopRequested_) break;
 
-            for (int r = 0; r < (int)text.size(); ++r) {
-                std::cout << "\x1b[" << (ROW + r) << ";" << COL << "H";
+            // Save current cursor position in the console region
+            std::cout << "\x1b[s";
+
+            // Move cursor to row 1 and overwrite marquee region rows with spaces to clear remnants
+            for (int r = 0; r < kMarqueeMaxRows; ++r) {
+                std::cout << "\x1b[" << (kMarqueeStartRow + r) << ";1H";
+                std::cout << std::string(kWindowWidth, ' ');
+            }
+
+            // Draw the new marquee frame within the Marquee Region
+            for (int r = 0; r < (int)text.size() && r < kMarqueeMaxRows; ++r) {
+                std::cout << "\x1b[" << (kMarqueeStartRow + r) << ";1H";
 
                 std::string line;
-                for (int c = 0; c < WINDOW; ++c) {
+                for (int c = 0; c < kWindowWidth; ++c) {
                     int src = offset + c;
                     if (src >= 0 && src < rowWidth) {
                         line += paddedText[r][src];
@@ -85,18 +104,17 @@ void View::showMarquee(const std::vector<std::string>& text, int speed) {
                         line += ' ';
                     }
                 }
-                line.append(WINDOW, ' ');
                 std::cout << line;
             }
 
-            std::cout << "\x1b[" << (ROW + text.size() + 1) << ";" << COL << "H";
-            std::cout << std::flush;
+            // Restore the cursor back down to the prompt line in the Console Region
+            std::cout << "\x1b[u" << std::flush;
+
             std::this_thread::sleep_for(std::chrono::milliseconds(speed));
         }
 
-        std::cout << "\x1b[" << (ROW + (int)text.size() + 2) << ";" << COL << "H";
-        std::cout << "\n" << std::flush;
+        // Restore cursor position on animation completion
+        std::cout << "\x1b[u" << std::flush;
         isRunning_ = false;
     });
 }
-
