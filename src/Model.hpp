@@ -11,6 +11,6 @@ public:
     int getSpeed() const;
 
 private:
-    std::string text_ = "CSOPESY";
+    std::string text_ = "Hello, World!";
     int speed_ = 50;
 };
