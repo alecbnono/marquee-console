@@ -17,10 +17,12 @@ void View::showAsciiArt(const std::string& text) const {
 void View::showHelp() const {
     std::cout <<
         "Commands:\n"
-        "  set_text <text> save the text to use for the marquee\n"
-        "  start_marquee   starts the marquee \"animation\"\n"
-        "  help            show this message\n"
-        "  exit            quit the program\n";
+        "  set_text <text>          save the text to use for the marquee\n"
+        "  set_speed <positive_int> save the speed of marquee animation (in ms)\n"
+        "  start_marquee            starts the marquee \"animation\"\n"
+        "  stop_marquee             stops the marquee \"animation\"\n"
+        "  help                     show this message\n"
+        "  exit                     quit the program\n";
 }
 
 void View::showPrompt() const {

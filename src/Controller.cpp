@@ -2,6 +2,7 @@
 #include "AsciiArt.hpp"
 
 #include <sstream>
+#include <charconv>
 
 Controller::Controller(Model& model, View& view) : model_(model), view_(view) {}
 
@@ -44,6 +45,41 @@ bool Controller::handleCommand(const std::string& line) {
         }
         model_.setText(text);
         view_.showMessage("Text saved for marquee: " + text);
+        return true;
+    }
+
+    if (command == "set_speed") {
+        if (tokens.size() != 2) {
+            view_.showMessage("Usage: set_speed <positive_int>");
+            return true;
+        }
+
+        try {
+            std::size_t pos = 0;
+            int speed = std::stoi(tokens[1], &pos);
+
+            // Rejects trailing characters such as "12abc"
+            if (pos != tokens[1].size()) {
+                view_.showMessage("Error: Speed contains non-numeric characters.");
+                return true;
+            }
+
+            // Must be positive
+            if (speed <= 0) {
+                view_.showMessage("Error: Speed must be greater than 0.");
+                return true;
+            }
+
+            model_.setSpeed(speed);
+            view_.showMessage("Speed set to " + std::to_string(speed));
+        } 
+        catch (const std::invalid_argument&) {
+            view_.showMessage("Error: Invalid number format for speed.");
+        } 
+        catch (const std::out_of_range&) {
+            view_.showMessage("Error: Speed value is too large.");
+        }
+
         return true;
     }
 
