@@ -102,7 +102,7 @@ void View::showMarquee(const std::vector<std::string>& text, int speed) {
 
     isRunning_ = true;
     marqueeThread_ = std::thread([this, paddedText, text, rowWidth, speed]() {
-        // Offset scrolls from off-screen left to off-screen right
+        // Offset scrolls from off-screen right to off-screen left
         int offset = -kWindowWidth;
 
         while (!stopRequested_) {
